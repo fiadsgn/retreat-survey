@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luxury Retreat Insights Survey</title>
+
+<!-- ══════════════════════════════════════════════════════════════
+     THINGS YOU EDIT (all in one place):
+
+     1. BRAND       → brand name shown in Q14 & the welcome title.
+     2. FORMSPREE   → your Formspree endpoint (currently xjgnrbln).
+     3. DEFAULT_LANG→ "en", "sk" or "ru". Language the form opens in.
+     4. To REMOVE a language: delete its button in <div class="langbar">
+        AND its block in STR + the matching keys in each question.
+     5. Q6 ("five_days") is still a PLACEHOLDER — replace title+options
+        in all three languages once you have the real question.
+     6. INTRO_VIDEO → name of the .mp4 you host next to this file.
+
+     Answers are always stored/sent in ENGLISH so your results stay
+     consistent no matter which language a person answers in.
+     ══════════════════════════════════════════════════════════════ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:      #F2F3EC;
+    --ink:        #2E3327;
+    --sage-deep:  #4F5D43;
+    --sage:       #7C8B63;
+    --sage-soft:  #A9B78D;
+    --wash:       #DFE4D1;
+    --line:       #C9D0B8;
+    --muted:      #6E7560;
+    --serif: "Libre Baskerville", Georgia, serif;
+    --sans: "Helvetica Neue", Arial, system-ui, sans-serif;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    font-family:var(--serif); background:var(--paper); color:var(--ink);
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+  }
+
+  /* ── progress ── */
+  .progress{ position:fixed; top:0; left:0; right:0; height:3px; z-index:20; }
+  .progress__fill{ height:100%; width:0%; background:var(--sage-deep);
+    transition:width .5s cubic-bezier(.4,0,.2,1); }
+
+  /* ── language toggle ── */
+  .langbar{
+    position:fixed; top:16px; right:16px; z-index:30;
+    display:flex; gap:2px; padding:3px;
+    background:var(--paper); border:1px solid var(--line); border-radius:0;
+  }
+  .langbar button{
+    font-family:var(--serif); font-size:.78rem; letter-spacing:.03em;
+    border:none; background:transparent; color:var(--muted);
+    padding:5px 11px; border-radius:0; cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  .langbar button:hover{ color:var(--ink); }
+  .langbar button.on{ background:var(--sage-deep); color:var(--paper); }
+
+  /* ── stage ── */
+  .stage{ min-height:100%; display:flex; align-items:center; justify-content:center;
+    padding:76px 24px 40px; }
+  .card{ width:100%; max-width:640px; }
+
+  .anim{ animation:rise .55s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes rise{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
+  @media (prefers-reduced-motion:reduce){
+    .anim{ animation:none; } .progress__fill{ transition:none; }
+  }
+
+  .qnum{ display:inline-flex; align-items:center; gap:8px; color:var(--sage-deep);
+    font-size:.85rem; margin-bottom:18px; }
+  .qnum b{ font-weight:700; } .qnum span{ color:var(--muted); }
+
+  .qtitle{ font-weight:400; font-size:clamp(1.45rem, 1rem + 2.2vw, 2.15rem);
+    line-height:1.28; letter-spacing:-.01em; margin-bottom:8px; }
+  .qhint{ font-style:italic; color:var(--muted); font-size:1rem; margin-bottom:8px; }
+  .fields{ margin-top:30px; }
+
+  .opt{ display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+    background:transparent; border:1px solid var(--line); border-radius:10px;
+    padding:15px 16px; margin-bottom:10px; font-family:var(--serif);
+    font-size:1.05rem; color:var(--ink); cursor:pointer;
+    transition:background .15s, border-color .15s, transform .05s; }
+  .opt:hover{ background:var(--wash); border-color:var(--sage-soft); }
+  .opt:active{ transform:scale(.995); }
+  .opt.sel{ background:var(--wash); border-color:var(--sage-deep); }
+  .opt__key{ flex:none; width:26px; height:26px; border-radius:6px;
+    border:1px solid var(--sage-soft); display:grid; place-items:center;
+    font-size:.8rem; font-weight:700; color:var(--sage-deep); background:var(--paper);
+    transition:background .15s, color .15s, border-color .15s; }
+  .opt.sel .opt__key{ background:var(--sage-deep); color:var(--paper); border-color:var(--sage-deep); }
+
+  select.field-input{ width:100%; font-family:var(--serif); font-size:1.05rem; color:var(--ink);
+    padding:14px 16px; border:1px solid var(--line); border-radius:10px;
+    background:var(--paper); appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--sage-deep) 50%),
+                     linear-gradient(135deg,var(--sage-deep) 50%,transparent 50%);
+    background-position:calc(100% - 20px) 55%, calc(100% - 14px) 55%;
+    background-size:6px 6px, 6px 6px; background-repeat:no-repeat; }
+
+  .field-input, .field-area{ width:100%; font-family:var(--serif); color:var(--ink);
+    font-size:16px; background:transparent; border:none;
+    border-bottom:1.5px solid var(--line); padding:10px 2px; border-radius:0;
+    transition:border-color .2s; }
+  .field-area{ resize:none; min-height:96px; line-height:1.6; }
+  .field-input::placeholder, .field-area::placeholder{ color:var(--muted); font-style:italic; opacity:.7; }
+  .field-input:focus, .field-area:focus, select.field-input:focus{ outline:none; border-color:var(--sage-deep); }
+  .opt:focus-visible{ outline:none; box-shadow:0 0 0 3px var(--sage-soft); }
+  .hintline{ color:var(--muted); font-size:.85rem; margin-top:10px; font-style:italic; }
+
+  .rank-item{ display:flex; align-items:center; gap:12px; border:1px solid var(--line);
+    border-radius:10px; padding:12px 12px 12px 14px; margin-bottom:9px; background:var(--paper); }
+  .rank-item.dragging{ opacity:.5; }
+  .rank-num{ flex:none; width:24px; height:24px; border-radius:50%; background:var(--sage-deep);
+    color:var(--paper); display:grid; place-items:center; font-size:.8rem; font-weight:700; }
+  .rank-label{ flex:1; font-size:1rem; }
+  .rank-ctrl{ display:flex; gap:4px; flex:none; }
+  .rank-btn{ width:30px; height:30px; border:1px solid var(--line); border-radius:7px;
+    background:var(--paper); color:var(--sage-deep); cursor:pointer; font-size:1rem;
+    line-height:1; display:grid; place-items:center; }
+  .rank-btn:hover:not(:disabled){ background:var(--wash); border-color:var(--sage-soft); }
+  .rank-btn:disabled{ opacity:.3; cursor:default; }
+  .rank-handle{ cursor:grab; color:var(--muted); flex:none; padding:0 2px; user-select:none; }
+
+  .nav{ display:flex; align-items:center; gap:14px; margin-top:36px; }
+  .btn{ font-family:var(--serif); font-size:1rem; cursor:pointer; border-radius:10px;
+    padding:13px 26px; border:1px solid transparent;
+    transition:background .15s, color .15s, border-color .15s, transform .05s; }
+  .btn:active{ transform:translateY(1px); }
+  .btn--primary{ background:var(--sage-deep); color:var(--paper); }
+  .btn--primary:hover{ background:#3f4b35; }
+  .btn--ghost{ background:transparent; color:var(--muted); border-color:var(--line); }
+  .btn--ghost:hover{ color:var(--ink); border-color:var(--sage-soft); }
+  .nav__spacer{ flex:1; }
+  .keyhint{ color:var(--muted); font-size:.8rem; }
+  .keyhint kbd{ font-family:var(--serif); border:1px solid var(--line); border-radius:5px;
+    padding:1px 6px; font-size:.78rem; background:var(--paper); }
+
+  /* full-bleed video intro */
+  .intro{ position:fixed; inset:0; z-index:10; display:grid; place-items:center; background:#000; }
+  .intro.hidden{ display:none !important; }
+  .intro__vid{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  /* optional legibility scrim — raise the alpha if the button gets lost on bright footage */
+  .intro::after{ content:""; position:absolute; inset:0; background:rgba(0,0,0,0); pointer-events:none; }
+  .intro__btn{
+    position:relative; z-index:2;
+    transform:translateY(min(125px, 14vh));
+    font-family:var(--sans); text-transform:uppercase; letter-spacing:.2em;
+    font-size:.8rem; color:#fff;
+    background:transparent; border:1px solid rgba(255,255,255,.9); border-radius:0;
+    padding:16px 42px; cursor:pointer;
+    text-shadow:0 1px 3px rgba(0,0,0,.3);
+    transition:background .2s, color .2s, text-shadow .2s;
+  }
+  .intro__btn:hover{ background:#fff; color:#2E3327; text-shadow:none; }
+  .lead-title{ font-size:clamp(1.7rem, 1.1rem + 2.8vw, 2.6rem); line-height:1.22;
+    font-weight:400; letter-spacing:-.015em; margin-bottom:22px; }
+  .lead-body{ font-size:1.08rem; line-height:1.7; color:#3c4234; margin-bottom:8px; max-width:56ch; }
+  .lead-body + .lead-body{ margin-top:14px; }
+  .err{ color:#8a3d2e; font-size:.9rem; margin-top:14px; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="progress"><div class="progress__fill" id="progressFill"></div></div>
+
+<div class="langbar" id="langbar">
+  <button data-lang="sk">SK</button>
+  <button data-lang="ru">RU</button>
+  <button data-lang="en">EN</button>
+</div>
+
+<div class="intro hidden" id="intro"></div>
+
+<div class="stage"><div class="card" id="card"></div></div>
+
+<script>
+/* ═══════════════ SETTINGS ═══════════════ */
+const BRAND = "Zalinae";
+const FORMSPREE = "https://formspree.io/f/xjgnrbln";
+const DEFAULT_LANG = "en";           // "en" | "sk" | "ru"
+let LANG = DEFAULT_LANG;
+/* Intro video: drop the .mp4 in the same folder as this file and put its
+   name here. Silent ambient loop. Set to "" to remove the video. */
+const INTRO_VIDEO  = "intro.mp4";
+const INTRO_POSTER = "";             // optional still frame, e.g. "intro-poster.jpg"
+
+/* ═══════════════ UI + WELCOME + ENDING STRINGS ═══════════════ */
+const STR = {
+  en:{
+    back:"Back", next:"Next", of:"of",
+    pressLetter:"Press a letter to choose", enterCont:"to continue",
+    dropPlaceholder:"Type or select an option",
+    textPlaceholder:"Type your answer here...", emailPlaceholder:"name@example.com",
+    lineBreak:"Shift + Enter for a line break",
+    sending:"Sending your responses…",
+    emailErr:"That email doesn't look right — mind checking it?",
+    failTitle:"That didn't send.",
+    failBody:"Check your connection and try again — your answers are still here.",
+    retry:"Try again", moveUp:"Move up", moveDown:"Move down",
+    yes:"Yes", no:"No",
+    welcomeTitle:"Welcome to the "+BRAND+" Luxury Retreat Insights Survey",
+    welcomeBody:[
+      "We're deeply grateful for your time. Our team is passionate about creating transformative retreats designed just for women—spaces that nurture your spirit, foster genuine connection, and provide the trust and support you deserve.",
+      "Your thoughtful responses will shape meaningful experiences for incredible women like you. Thank you for sharing your wisdom and wishes."],
+    begin:"Begin Survey",
+    endTitle:"Thank you.",
+    endBody:["Your words will help shape retreats made with real care for women like you.",
+             "We can't wait to welcome you."]
+  },
+  sk:{
+    back:"Späť", next:"Ďalej", of:"z",
+    pressLetter:"Stlačte písmeno pre výber", enterCont:"pre pokračovanie",
+    dropPlaceholder:"Napíšte alebo vyberte možnosť",
+    textPlaceholder:"Sem napíšte svoju odpoveď...", emailPlaceholder:"meno@example.com",
+    lineBreak:"Shift + Enter pre nový riadok",
+    sending:"Odosielame vaše odpovede…",
+    emailErr:"Zdá sa, že e-mail nie je správny — skontrolujte ho, prosím.",
+    failTitle:"Odoslanie zlyhalo.",
+    failBody:"Skontrolujte pripojenie a skúste znova — vaše odpovede sú uložené.",
+    retry:"Skúsiť znova", moveUp:"Nahor", moveDown:"Nadol",
+    yes:"Áno", no:"Nie",
+    welcomeTitle:"Vitajte v prieskume "+BRAND+" o luxusných retreatoch",
+    welcomeBody:[
+      "Úprimne si vážime váš čas. Náš tím s láskou vytvára retreaty určené práve pre ženy — priestory, ktoré napĺňajú ducha, prinášajú skutočné spojenie a starostlivosť a podporu, ktoré si zaslúžite.",
+      "Vaše premyslené odpovede pomôžu formovať výnimočné zážitky pre úžasné ženy, ako ste vy. Ďakujeme, že sa delíte o svoju múdrosť a priania."],
+    begin:"Spustiť prieskum",
+    endTitle:"Ďakujeme.",
+    endBody:["Vaše slová pomôžu vytvárať retreaty s naozajstnou starostlivosťou o ženy, ako ste vy.",
+             "Tešíme sa, že vás jedného dňa privítame."]
+  },
+  ru:{
+    back:"Назад", next:"Далее", of:"из",
+    pressLetter:"Нажмите букву для выбора", enterCont:"чтобы продолжить",
+    dropPlaceholder:"Введите или выберите вариант",
+    textPlaceholder:"Введите ответ здесь...", emailPlaceholder:"имя@example.com",
+    lineBreak:"Shift + Enter — перенос строки",
+    sending:"Отправляем ваши ответы…",
+    emailErr:"Кажется, в адресе ошибка — проверьте, пожалуйста.",
+    failTitle:"Не удалось отправить.",
+    failBody:"Проверьте соединение и попробуйте ещё раз — ваши ответы сохранены.",
+    retry:"Попробовать снова", moveUp:"Вверх", moveDown:"Вниз",
+    yes:"Да", no:"Нет",
+    welcomeTitle:"Добро пожаловать в опрос "+BRAND+" о роскошных ретритах",
+    welcomeBody:[
+      "Мы искренне благодарны вам за уделённое время. Наша команда с любовью создаёт ретриты, задуманные специально для женщин, — пространства, которые питают дух, дарят настоящую близость и ту заботу и поддержку, которых вы заслуживаете.",
+      "Ваши вдумчивые ответы помогут создавать значимые впечатления для таких прекрасных женщин, как вы. Спасибо, что делитесь своей мудростью и пожеланиями."],
+    begin:"Начать опрос",
+    endTitle:"Спасибо.",
+    endBody:["Ваши слова помогут создавать ретриты с настоящей заботой о таких женщинах, как вы.",
+             "Будем рады однажды встретить вас лично."]
+  }
+};
+
+/* ═══════════════ QUESTIONS ═══════════════
+   Each translatable string is { en, sk, ru }.
+   An option may be a plain string (same in all languages, e.g. age
+   brackets) or a { en, sk, ru } object. The ENGLISH value is the
+   canonical value used for logic (showIf) and for the saved result. */
+const questions = [
+  { id:"age", label:"Age range", type:"dropdown",
+    title:{ en:"Which age range do you identify with?",
+            sk:"Do ktorej vekovej skupiny patríte?",
+            ru:"К какой возрастной группе вы себя относите?" },
+    options:["18–24","25–34","35–44","45–54","55–64","65+"] },
+
+  { id:"frequency", label:"Retreat frequency", type:"single",
+    title:{ en:"How often do you take time away for wellness, personal growth, or restorative retreats for yourself?",
+            sk:"Ako často si doprajete čas pre seba — na oddych, osobný rast alebo regeneračné retreaty?",
+            ru:"Как часто вы находите время для себя — для оздоровления, личностного роста или восстанавливающих ретритов?" },
+    options:[
+      { en:"Never", sk:"Nikdy", ru:"Никогда" },
+      { en:"Rarely", sk:"Zriedka", ru:"Редко" },
+      { en:"Once a year", sk:"Raz za rok", ru:"Раз в год" },
+      { en:"A few times a year", sk:"Niekoľkokrát do roka", ru:"Несколько раз в год" },
+      { en:"Regularly", sk:"Pravidelne", ru:"Регулярно" } ] },
+
+  { id:"experiences", label:"Ideal experiences", type:"multi",
+    title:{ en:"When you imagine your ideal retreat, which experiences speak to your soul?",
+            sk:"Keď si predstavíte svoj ideálny retreat, čo rezonuje s vašou dušou?",
+            ru:"Когда вы представляете идеальный ретрит, что откликается в вашей душе?" },
+    hint:{ en:"Select all that resonate", sk:"Vyberte všetko, čo vám je blízke", ru:"Выберите всё, что вам близко" },
+    options:[
+      { en:"Deep connection and meaningful conversation", sk:"Hlboké spojenie a úprimné rozhovory", ru:"Глубокая связь и искренние разговоры" },
+      { en:"Rest and nervous system reset", sk:"Oddych a upokojenie nervovej sústavy", ru:"Отдых и перезагрузка нервной системы" },
+      { en:"Personal growth and self-discovery", sk:"Osobný rast a sebapoznanie", ru:"Личностный рост и самопознание" },
+      { en:"Spiritual reflection", sk:"Duchovné rozjímanie", ru:"Духовные размышления" },
+      { en:"Creative expression", sk:"Tvorivé vyjadrenie", ru:"Творческое самовыражение" },
+      { en:"Nature immersion", sk:"Ponorenie sa do prírody", ru:"Погружение в природу" },
+      { en:"Luxury spa and relaxation", sk:"Luxusné spa a relaxácia", ru:"Роскошный спа-отдых и релаксация" },
+      { en:"Movement and fitness", sk:"Pohyb a fitnes", ru:"Движение и фитнес" },
+      { en:"Cultural exploration", sk:"Spoznávanie kultúry", ru:"Знакомство с культурой" },
+      { en:"Leadership or life transition support", sk:"Podpora v líderstve alebo životných zmenách", ru:"Поддержка в лидерстве или переменах в жизни" },
+      { en:"Other", sk:"Iné", ru:"Другое" } ] },
+
+  { id:"other_detail", label:"Other experience (write-in)", type:"longtext",
+    title:{ en:"If you selected \"Other\", please tell us: what kind of retreat experience would you love to see available for women like you?",
+            sk:"Ak ste vybrali „Iné\", napíšte nám: aký retreat by ste si priali pre ženy, ako ste vy?",
+            ru:"Если вы выбрали «Другое», расскажите: какой ретрит вы хотели бы видеть для таких женщин, как вы?" },
+    showIf:{ q:"experiences", includes:"Other" } },
+
+  { id:"ranking", label:"Theme ranking", type:"rank",
+    title:{ en:"Please rank the retreat themes that draw you most.",
+            sk:"Zoraďte témy retreatov podľa toho, čo vás najviac priťahuje.",
+            ru:"Расставьте темы ретритов по степени важности для вас." },
+    hint:{ en:"Arrange them in order of personal importance",
+           sk:"Usporiadajte ich podľa osobnej dôležitosti",
+           ru:"Расположите их в порядке личной значимости" },
+    options:[
+      { en:"Deep connection and meaningful conversation", sk:"Hlboké spojenie a úprimné rozhovory", ru:"Глубокая связь и искренние разговоры" },
+      { en:"Rest and nervous system reset", sk:"Oddych a upokojenie nervovej sústavy", ru:"Отдых и перезагрузка нервной системы" },
+      { en:"Personal growth and self-discovery", sk:"Osobný rast a sebapoznanie", ru:"Личностный рост и самопознание" },
+      { en:"Spiritual reflection", sk:"Duchovné rozjímanie", ru:"Духовные размышления" },
+      { en:"Creative expression", sk:"Tvorivé vyjadrenie", ru:"Творческое самовыражение" },
+      { en:"Nature immersion", sk:"Ponorenie sa do prírody", ru:"Погружение в природу" },
+      { en:"Luxury spa and relaxation", sk:"Luxusné spa a relaxácia", ru:"Роскошный спа-отдых и релаксация" },
+      { en:"Movement and fitness", sk:"Pohyb a fitnes", ru:"Движение и фитнес" },
+      { en:"Cultural exploration", sk:"Spoznávanie kultúry", ru:"Знакомство с культурой" },
+      { en:"Leadership or life transition support", sk:"Podpora v líderstve alebo životných zmenách", ru:"Поддержка в лидерстве или переменах в жизни" } ] },
+
+  /* ⚠️ Q6 PLACEHOLDER — replace title + options (all 3 languages). */
+  { id:"five_days", label:"Five days", type:"single",
+    title:{ en:"If you had 5 days wholly dedicated to a retreat, what balance would you want most?",
+            sk:"Keby ste mali 5 dní úplne venovaných retreatu, akú rovnováhu by ste si priali najviac?",
+            ru:"Если бы у вас было 5 дней полностью посвящённых ретриту, какой баланс вы бы предпочли?" },
+    options:[
+      { en:"Mostly rest and stillness", sk:"Prevažne oddych a pokoj", ru:"В основном отдых и покой" },
+      { en:"A balance of rest and activity", sk:"Rovnováha oddychu a aktivity", ru:"Баланс отдыха и активности" },
+      { en:"Mostly active and immersive", sk:"Prevažne aktivita a plné ponorenie", ru:"В основном активность и погружение" },
+      { en:"A guided programme with structure", sk:"Vedený program so štruktúrou", ru:"Продуманная программа со структурой" },
+      { en:"Complete freedom to choose day by day", sk:"Úplná sloboda voľby deň po dni", ru:"Полная свобода выбора каждый день" } ] },
+
+  { id:"feelings", label:"Desired feelings", type:"multi",
+    title:{ en:"Which words best describe how you would want to feel after a retreat?",
+            sk:"Ktoré slová najlepšie vystihujú to, ako by ste sa chceli cítiť po retreate?",
+            ru:"Какие слова лучше всего описывают то, как вы хотели бы чувствовать себя после ретрита?" },
+    hint:{ en:"Select all that apply", sk:"Vyberte všetky, ktoré sedia", ru:"Выберите все подходящие" },
+    options:[
+      { en:"Renewed", sk:"Obnovená", ru:"Обновлённой" },
+      { en:"Connected", sk:"Prepojená", ru:"Сопричастной" },
+      { en:"Clear", sk:"S jasnou mysľou", ru:"С ясной головой" },
+      { en:"Confident", sk:"Sebavedomá", ru:"Уверенной" },
+      { en:"Rested", sk:"Oddýchnutá", ru:"Отдохнувшей" },
+      { en:"Inspired", sk:"Inšpirovaná", ru:"Вдохновлённой" },
+      { en:"Transformed", sk:"Premenená", ru:"Преображённой" },
+      { en:"Seen and understood", sk:"Videná a pochopená", ru:"Увиденной и понятой" } ] },
+
+  { id:"main_reason", label:"Main reason", type:"longtext",
+    title:{ en:"What is the main reason you feel drawn to consider joining a retreat?",
+            sk:"Aký je hlavný dôvod, prečo vás láka zúčastniť sa retreatu?",
+            ru:"Какая главная причина влечёт вас к участию в ретрите?" } },
+
+  { id:"length", label:"Preferred length", type:"single",
+    title:{ en:"What length of retreat feels most realistic and appealing to you at this time?",
+            sk:"Aká dĺžka retreatu je pre vás teraz najreálnejšia a najlákavejšia?",
+            ru:"Какая продолжительность ретрита кажется вам сейчас наиболее реальной и привлекательной?" },
+    options:[
+      { en:"Weekend", sk:"Víkend", ru:"Выходные" },
+      { en:"4–5 days", sk:"4–5 dní", ru:"4–5 дней" },
+      { en:"1 week", sk:"1 týždeň", ru:"1 неделя" },
+      { en:"10+ days", sk:"10+ dní", ru:"10+ дней" } ] },
+
+  { id:"accommodation", label:"Accommodation level", type:"single",
+    title:{ en:"What level of accommodation would you expect from a retreat experience you would seriously consider?",
+            sk:"Akú úroveň ubytovania by ste očakávali od retreatu, ktorý by ste vážne zvažovali?",
+            ru:"Какой уровень размещения вы ожидали бы от ретрита, который всерьёз рассматриваете?" },
+    options:[
+      { en:"Comfortable and simple", sk:"Pohodlné a jednoduché", ru:"Уютное и простое" },
+      { en:"Boutique and thoughtfully designed", sk:"Butikové a premyslene navrhnuté", ru:"Бутик-формат, продуманный дизайн" },
+      { en:"High-end luxury", sk:"Vysoký luxus", ru:"Высокий уровень люкс" },
+      { en:"Ultra-luxury with premium service", sk:"Ultra-luxus s prémiovým servisom", ru:"Ультра-люкс с премиальным сервисом" } ] },
+
+  { id:"price", label:"Price range", type:"single",
+    title:{ en:"What price range would feel reasonable for the type of premium retreat you desire?",
+            sk:"Aké cenové rozpätie by vám prišlo primerané za prémiový retreat, aký si predstavujete?",
+            ru:"Какой ценовой диапазон был бы для вас разумным за желаемый премиальный ретрит?" },
+    options:[
+      { en:"Under $500", sk:"Do $500", ru:"До $500" },
+      "$500–$1,500", "$1,500–$3,000", "$3,000–$5,000", "$5,000+" ] },
+
+  { id:"trust", label:"Trust factors", type:"multi",
+    title:{ en:"What would build trust in a new retreat brand for you?",
+            sk:"Čo by u vás vzbudilo dôveru k novej značke retreatov?",
+            ru:"Что укрепило бы ваше доверие к новому бренду ретритов?" },
+    hint:{ en:"Select all that would matter most",
+           sk:"Vyberte všetko, čo je pre vás najdôležitejšie",
+           ru:"Выберите всё самое важное для вас" },
+    options:[
+      { en:"Strong testimonials", sk:"Presvedčivé referencie", ru:"Убедительные отзывы" },
+      { en:"Clear itinerary", sk:"Jasný program", ru:"Понятная программа" },
+      { en:"Experienced facilitators", sk:"Skúsení lektori", ru:"Опытные ведущие" },
+      { en:"Personal connection with the host", sk:"Osobné spojenie s hostiteľkou", ru:"Личная связь с организатором" },
+      { en:"Beautiful location", sk:"Krásne miesto", ru:"Красивое место" },
+      { en:"Transparent pricing", sk:"Transparentné ceny", ru:"Прозрачные цены" },
+      { en:"Small group size", sk:"Malá skupina", ru:"Небольшая группа" },
+      { en:"Values that align with mine", sk:"Hodnoty, ktoré sú v súlade s mojimi", ru:"Ценности, близкие моим" } ] },
+
+  { id:"dream", label:"Dream retreat", type:"longtext",
+    title:{ en:"In just a few sentences, please describe your dream retreat—the experience, the feeling, and what would make it truly special for you.",
+            sk:"V pár vetách opíšte svoj vysnívaný retreat — zážitok, pocit a to, čo by ho pre vás urobilo naozaj výnimočným.",
+            ru:"В нескольких предложениях опишите ретрит вашей мечты — впечатления, ощущения и то, что сделало бы его по-настоящему особенным для вас." } },
+
+  { id:"updates", label:"Wants updates", type:"yesno",
+    title:{ en:"Would you like to receive updates about inspiring retreats or early access to new offerings from "+BRAND+"?",
+            sk:"Chceli by ste dostávať novinky o inšpiratívnych retreatoch a skorý prístup k novým ponukám od "+BRAND+"?",
+            ru:"Хотели бы вы получать новости о вдохновляющих ретритах и ранний доступ к новинкам от "+BRAND+"?" } },
+
+  { id:"email", label:"Email", type:"email",
+    title:{ en:"To stay connected and be the first to hear about uplifting retreats, please share your email address:",
+            sk:"Ak chcete zostať v kontakte a dozvedieť sa o povznášajúcich retreatoch ako prvá, zanechajte nám svoj e-mail:",
+            ru:"Чтобы оставаться на связи и первой узнавать о вдохновляющих ретритах, оставьте, пожалуйста, свой e-mail:" },
+    showIf:{ q:"updates", equals:"Yes" } }
+];
+
+/* ═══════════════ ENGINE ═══════════════ */
+const answers = {};
+let pos = -1;
+const card = document.getElementById("card");
+const fill = document.getElementById("progressFill");
+const langbar = document.getElementById("langbar");
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+function t(key){ return STR[LANG][key]; }
+function T(obj){ return obj ? (obj[LANG] || obj.en) : ""; }
+function optLabel(o){ return typeof o==="string" ? o : (o[LANG] || o.en); }
+function optVal(o){ return typeof o==="string" ? o : o.en; }
+
+function applies(q){
+  if(!q.showIf) return true;
+  const a = answers[q.showIf.q];
+  if("equals" in q.showIf)   return a === q.showIf.equals;
+  if("includes" in q.showIf) return Array.isArray(a) && a.includes(q.showIf.includes);
+  return true;
+}
+function applicableList(){ return questions.map((q,i)=>({q,i})).filter(x=>applies(x.q)); }
+function nextPos(from){ for(let i=from+1;i<questions.length;i++) if(applies(questions[i])) return i; return questions.length; }
+function prevPos(from){ for(let i=from-1;i>=0;i--) if(applies(questions[i])) return i; return -1; }
+
+function setProgress(){
+  if(pos<0){ fill.style.width="0%"; return; }
+  if(pos>=questions.length){ fill.style.width="100%"; return; }
+  const list=applicableList(); const idx=list.findIndex(x=>x.i===pos);
+  fill.style.width=((idx+1)/list.length*100)+"%";
+}
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function goNext(){ pos = pos<0 ? nextPos(-1) : nextPos(pos); render(); }
+function goBack(){ pos = pos>=questions.length ? prevPos(questions.length) : prevPos(pos); render(); }
+
+function render(){
+  setProgress();
+  if(pos<0) return renderWelcome();
+  document.getElementById("intro").classList.add("hidden");
+  if(pos>=questions.length) return submit();
+  renderQuestion(questions[pos], applicableList().findIndex(x=>x.i===pos));
+}
+
+function renderWelcome(){
+  const intro=document.getElementById("intro");
+  card.innerHTML="";
+  const video = INTRO_VIDEO
+    ? '<video class="intro__vid" autoplay muted loop playsinline preload="auto"'+
+      (INTRO_POSTER?' poster="'+esc(INTRO_POSTER)+'"':'')+
+      '><source src="'+esc(INTRO_VIDEO)+'" type="video/mp4"></video>'
+    : '';
+  intro.innerHTML = video +
+    '<button class="intro__btn" id="start">'+esc(t("begin"))+'</button>';
+  intro.classList.remove("hidden");
+  const v=intro.querySelector(".intro__vid");
+  if(v){ v.muted=true; const p=v.play(); if(p&&p.catch) p.catch(()=>{}); }
+  document.getElementById("start").onclick=goNext;
+}
+
+function renderQuestion(q, displayIdx){
+  const total=applicableList().length;
+  let inner='<div class="qnum"><b>'+(displayIdx+1)+'</b><span>'+esc(t("of"))+' '+total+'</span></div>';
+  inner+='<h2 class="qtitle">'+esc(T(q.title))+'</h2>';
+  if(q.hint) inner+='<p class="qhint">'+esc(T(q.hint))+'</p>';
+  inner+='<div class="fields" id="fields"></div><p class="err hidden" id="err"></p>';
+
+  const showNext=["multi","longtext","email","rank","dropdown"].includes(q.type);
+  inner+='<div class="nav"><button class="btn btn--ghost" id="back">'+esc(t("back"))+'</button>'+
+    (showNext?'<button class="btn btn--primary" id="next">'+esc(t("next"))+'</button>':'')+
+    '<span class="nav__spacer"></span>'+
+    (["single","multi","yesno"].includes(q.type)
+      ? '<span class="keyhint">'+esc(t("pressLetter"))+'</span>'
+      : (q.type!=="rank"?'<span class="keyhint"><kbd>Enter</kbd> '+esc(t("enterCont"))+'</span>':''))+
+    '</div>';
+
+  card.innerHTML='<div class="anim">'+inner+'</div>';
+  const f=document.getElementById("fields");
+
+  if(q.type==="single"||q.type==="yesno") buildOptions(f,q,false);
+  else if(q.type==="multi") buildOptions(f,q,true);
+  else if(q.type==="dropdown") buildDropdown(f,q);
+  else if(q.type==="longtext") buildText(f,q,true);
+  else if(q.type==="email") buildText(f,q,false);
+  else if(q.type==="rank") buildRank(f,q);
+
+  const back=document.getElementById("back"); if(back) back.onclick=goBack;
+  const next=document.getElementById("next"); if(next) next.onclick=()=>tryAdvance(q);
+}
+
+function buildOptions(f,q,multi){
+  const opts = q.type==="yesno"
+    ? [{en:"Yes",label:t("yes")},{en:"No",label:t("no")}]
+    : q.options.map(o=>({en:optVal(o),label:optLabel(o)}));
+  const cur=answers[q.id];
+  opts.forEach((o,i)=>{
+    const key = q.type==="yesno" ? o.label[0] : LETTERS[i];
+    const sel = multi ? (Array.isArray(cur)&&cur.includes(o.en)) : cur===o.en;
+    const b=document.createElement("button");
+    b.type="button"; b.className="opt"+(sel?" sel":"");
+    b.dataset.val=o.en; b.dataset.key=key.toLowerCase();
+    b.innerHTML='<span class="opt__key">'+esc(key)+'</span><span>'+esc(o.label)+'</span>';
+    b.onclick=()=>{
+      if(multi){
+        let a=Array.isArray(answers[q.id])?answers[q.id].slice():[];
+        a.includes(o.en)?a=a.filter(x=>x!==o.en):a.push(o.en);
+        answers[q.id]=a; b.classList.toggle("sel");
+      } else {
+        answers[q.id]=o.en;
+        f.querySelectorAll(".opt").forEach(x=>x.classList.remove("sel"));
+        b.classList.add("sel"); clearErr(); setTimeout(goNext,320);
+      }
+    };
+    f.appendChild(b);
+  });
+}
+
+function buildDropdown(f,q){
+  const s=document.createElement("select"); s.className="field-input";
+  s.innerHTML='<option value="" disabled '+(answers[q.id]?'':'selected')+'>'+esc(t("dropPlaceholder"))+'</option>'+
+    q.options.map(o=>'<option value="'+esc(optVal(o))+'"'+(answers[q.id]===optVal(o)?' selected':'')+'>'+esc(optLabel(o))+'</option>').join("");
+  s.onchange=()=>{ answers[q.id]=s.value; clearErr(); };
+  f.appendChild(s);
+}
+
+function buildText(f,q,area){
+  const el=document.createElement(area?"textarea":"input");
+  el.className=area?"field-area":"field-input";
+  if(!area) el.type = q.type==="email"?"email":"text";
+  el.placeholder = q.type==="email"?t("emailPlaceholder"):t("textPlaceholder");
+  if(answers[q.id]) el.value=answers[q.id];
+  el.oninput=()=>{ answers[q.id]=el.value.trim(); clearErr(); };
+  if(!area) el.onkeydown=e=>{ if(e.key==="Enter"){ e.preventDefault(); tryAdvance(q);} };
+  f.appendChild(el);
+  if(area) f.insertAdjacentHTML("beforeend",'<p class="hintline">'+esc(t("lineBreak"))+'</p>');
+  setTimeout(()=>el.focus(),50);
+}
+
+function buildRank(f,q){
+  const byVal={}; q.options.forEach(o=>byVal[optVal(o)]=o);
+  if(!Array.isArray(answers[q.id])) answers[q.id]=q.options.map(optVal);
+  const wrap=document.createElement("div"); wrap.id="ranklist";
+  answers[q.id].forEach(val=>{
+    const row=document.createElement("div");
+    row.className="rank-item"; row.draggable=true; row.dataset.val=val;
+    row.innerHTML='<span class="rank-handle" aria-hidden="true">⠿</span>'+
+      '<span class="rank-num"></span>'+
+      '<span class="rank-label">'+esc(optLabel(byVal[val]))+'</span>'+
+      '<span class="rank-ctrl">'+
+        '<button type="button" class="rank-btn up" aria-label="'+esc(t("moveUp"))+'">↑</button>'+
+        '<button type="button" class="rank-btn down" aria-label="'+esc(t("moveDown"))+'">↓</button>'+
+      '</span>';
+    wrap.appendChild(row);
+  });
+  f.appendChild(wrap);
+
+  function commit(){
+    answers[q.id]=[...wrap.children].map(r=>r.dataset.val);
+    [...wrap.children].forEach((r,i)=>{
+      r.querySelector(".rank-num").textContent=i+1;
+      r.querySelector(".up").disabled=i===0;
+      r.querySelector(".down").disabled=i===wrap.children.length-1;
+    });
+  }
+  wrap.onclick=e=>{
+    const btn=e.target.closest(".rank-btn"); if(!btn) return;
+    const row=btn.closest(".rank-item");
+    if(btn.classList.contains("up")&&row.previousElementSibling) wrap.insertBefore(row,row.previousElementSibling);
+    if(btn.classList.contains("down")&&row.nextElementSibling) wrap.insertBefore(row.nextElementSibling,row);
+    commit();
+  };
+  let dragged=null;
+  wrap.addEventListener("dragstart",e=>{ dragged=e.target.closest(".rank-item"); dragged.classList.add("dragging"); });
+  wrap.addEventListener("dragend",()=>{ if(dragged){ dragged.classList.remove("dragging"); dragged=null; commit(); } });
+  wrap.addEventListener("dragover",e=>{
+    e.preventDefault();
+    const after=[...wrap.querySelectorAll(".rank-item:not(.dragging)")].reduce((c,ch)=>{
+      const box=ch.getBoundingClientRect(); const off=e.clientY-box.top-box.height/2;
+      return (off<0&&off>c.offset)?{offset:off,el:ch}:c; },{offset:-Infinity}).el;
+    if(!dragged) return;
+    after?wrap.insertBefore(dragged,after):wrap.appendChild(dragged);
+  });
+  commit();
+}
+
+function tryAdvance(q){
+  if(q.type==="email"){
+    const v=answers[q.id];
+    if(v&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return showErr(t("emailErr"));
+  }
+  goNext();
+}
+function showErr(m){ const e=document.getElementById("err"); if(e){ e.textContent=m; e.classList.remove("hidden"); } }
+function clearErr(){ const e=document.getElementById("err"); if(e) e.classList.add("hidden"); }
+
+document.addEventListener("keydown",e=>{
+  if(pos<0||pos>=questions.length) return;
+  const q=questions[pos];
+  if(["single","multi","yesno"].includes(q.type)){
+    const btn=card.querySelector('.opt[data-key="'+e.key.toLowerCase()+'"]');
+    if(btn){ e.preventDefault(); btn.click(); }
+  }
+});
+
+/* language toggle */
+function setLang(l){
+  LANG=l;
+  document.documentElement.lang = l;
+  [...langbar.children].forEach(b=>b.classList.toggle("on", b.dataset.lang===l));
+  render();
+}
+[...langbar.children].forEach(b=> b.onclick=()=>setLang(b.dataset.lang));
+
+/* submit */
+async function submit(){
+  card.innerHTML='<div class="anim"><h2 class="qtitle">'+esc(t("sending"))+'</h2></div>';
+  const data=new FormData();
+  data.append("_subject","New Luxury Retreat Survey response");
+  data.append("Language",LANG.toUpperCase());
+  applicableList().forEach(({q})=>{
+    let v=answers[q.id];
+    if(v==null||v==="") v="—";
+    else if(Array.isArray(v)) v = q.type==="rank" ? v.map((x,i)=>(i+1)+". "+x).join("\n") : v.join(", ");
+    data.append(q.label,v);
+  });
+  try{
+    const res=await fetch(FORMSPREE,{ method:"POST", body:data, headers:{ "Accept":"application/json" } });
+    if(res.ok) renderEnding(); else throw new Error("bad");
+  }catch(err){
+    card.innerHTML='<div class="anim"><h2 class="qtitle">'+esc(t("failTitle"))+'</h2>'+
+      '<p class="lead-body">'+esc(t("failBody"))+'</p>'+
+      '<div class="nav"><button class="btn btn--primary" id="retry">'+esc(t("retry"))+'</button></div></div>';
+    document.getElementById("retry").onclick=submit;
+  }
+}
+function renderEnding(){
+  fill.style.width="100%";
+  card.innerHTML='<div class="anim"><h1 class="lead-title">'+esc(t("endTitle"))+'</h1>'+
+    t("endBody").map(p=>'<p class="lead-body">'+esc(p)+'</p>').join("")+'</div>';
+}
+
+setLang(DEFAULT_LANG);
+
+</script>
+</body>
+</html>
